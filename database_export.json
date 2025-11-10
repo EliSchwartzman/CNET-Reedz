@@ -1,0 +1,60 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "Eli",
+      "password_hash": "$2b$12$JpaxS3L4REt1DrHQCQofCOy8anhD0.4tV0/hc6Q9oVA1cflMV.4UC",
+      "role": "treasurer",
+      "reedz_balance": 0,
+      "is_active": 1,
+      "created_at": "2025-11-02 17:46:58"
+    },
+    {
+      "id": 2,
+      "username": "John",
+      "password_hash": "$2b$12$R4Z6jFL3HJY5HXgf8Vh0i.gpg.LpdIEsg./xvevZyl4qW1OLNckMG",
+      "role": "commissioner",
+      "reedz_balance": 0,
+      "is_active": 1,
+      "created_at": "2025-11-02 19:08:22"
+    }
+  ],
+  "bets": [
+    {
+      "id": 1,
+      "title": "Example title",
+      "description": "Example description",
+      "week": 1,
+      "answer_type": "numeric",
+      "correct_answer": "10",
+      "status": "resolved",
+      "created_by": 1,
+      "created_at": "2025-11-02 17:50:53",
+      "closed_at": "2025-11-02 18:58:35",
+      "resolved_at": "2025-11-02 18:58:43"
+    },
+    {
+      "id": 2,
+      "title": "Example bet 2",
+      "description": "test description",
+      "week": 2,
+      "answer_type": "text",
+      "correct_answer": "0",
+      "status": "resolved",
+      "created_by": 1,
+      "created_at": "2025-11-02 19:15:41",
+      "closed_at": "2025-11-02 19:15:53",
+      "resolved_at": "2025-11-02 19:16:04"
+    }
+  ],
+  "predictions": [
+    {
+      "id": 1,
+      "bet_id": 1,
+      "user_id": 1,
+      "answer": "10",
+      "submitted_at": "2025-11-02 18:58:06",
+      "points_earned": 26
+    }
+  ]
+}
