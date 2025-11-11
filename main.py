@@ -1,5 +1,6 @@
 """
 Command-line interface for testing the Reedz platform
+bingo
 """
 from supabase_db import SupabaseDatabase
 from auth import AuthManager
