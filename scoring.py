@@ -2,13 +2,13 @@
 Scoring and Reedz distribution logic
 """
 from typing import Tuple, List, Dict
-from database import Database
+from supabase_db import SupabaseDatabase
 from models import User, Bet, Prediction, BetStatus, AnswerType
 
 class ScoringManager:
     """Handle scoring and Reedz distribution"""
     
-    def __init__(self, db: Database):
+    def __init__(self, db: SupabaseDatabase):
         self.db = db
     
     def resolve_bet(self, user: User, bet_id: int, correct_answer: str) -> Tuple[bool, str, Dict]:

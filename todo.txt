@@ -1,0 +1,10 @@
+allow for password reset or lookup by the user
+make user ids generate sequentially in the event of a deleted user
+uniform formmatting of tables
+identify which legacy files are no longer necessary
+github autocommit how and why
+
+thoroughly comment and understand all of the code
+documentation.pdf
+design.pdf
+video.mp4 with screencast

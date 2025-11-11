@@ -1,75 +1,53 @@
-"""
-Authentication and authorization logic
-"""
-import bcrypt
-from typing import Tuple, Optional
-from database import Database
-from models import User, UserRole
+import hashlib
+import hmac
+from supabase_db import SupabaseDatabase
+from models import UserRole
 
-class AuthManager:
-    """Handle authentication operations"""
+db = SupabaseDatabase()
+
+def hash_password(password: str) -> str:
+    """Hash password using SHA-256"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password: str, password_hash: str) -> bool:
+    """Verify password against hash"""
+    return hash_password(password) == password_hash
+
+def register_user(username: str, password: str, role: UserRole = UserRole.MEMBER) -> tuple[bool, str, int]:
+    """Register a new user"""
+    if not username or not password:
+        return False, "Username and password required", 0
     
-    def __init__(self, db: Database):
-        self.db = db
+    if len(username) < 3:
+        return False, "Username must be at least 3 characters", 0
     
-    def register(self, username: str, password: str) -> Tuple[bool, str, Optional[int]]:
-        """
-        Register a new user
-        
-        Returns: (success, message, user_id)
-        """
-        # Validation
-        if not username or len(username) < 3:
-            return False, "Username must be at least 3 characters", None
-        
-        if not password or len(password) < 6:
-            return False, "Password must be at least 6 characters", None
-        
-        # Create user
-        return self.db.create_user(username, password)
+    if len(password) < 6:
+        return False, "Password must be at least 6 characters", 0
     
-    def login(self, username: str, password: str) -> Tuple[bool, str, Optional[User]]:
-        """
-        Authenticate a user
-        
-        Returns: (success, message, user_object)
-        """
-        # Get user
-        user = self.db.get_user_by_username(username)
-        
-        if not user:
-            return False, "Invalid username or password", None
-        
-        if not user.is_active:
-            return False, "Account is disabled", None
-        
-        # Verify password
-        if bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
-            return True, "Login successful", user
-        else:
-            return False, "Invalid username or password", None
+    # Check if user exists
+    existing_user = db.get_user_by_username(username)
+    if existing_user:
+        return False, "Username already exists", 0
     
-    def require_admin(self, user: User) -> Tuple[bool, str]:
-        """
-        Check if user has admin privileges
-        
-        Returns: (is_admin, message)
-        """
-        if user.is_admin():
-            return True, "Access granted"
-        return False, "Admin access required"
+    # Create user with the specified role
+    password_hash = hash_password(password)
+    success, message, user_id = db.create_user(username, password_hash, role)
     
-    def promote_user(self, admin_user: User, target_user_id: int, 
-                     new_role: UserRole) -> Tuple[bool, str]:
-        """
-        Promote a user to a new role (admin only)
-        
-        Returns: (success, message)
-        """
-        # Check admin privileges
-        is_admin, msg = self.require_admin(admin_user)
-        if not is_admin:
-            return False, msg
-        
-        # Update role
-        return self.db.update_user_role(target_user_id, new_role)
+    return success, message, user_id or 0
+
+def login_user(username: str, password: str) -> tuple[bool, str, int]:
+    """Login a user"""
+    if not username or not password:
+        return False, "Username and password required", 0
+    
+    user = db.get_user_by_username(username)
+    if not user:
+        return False, "Invalid username or password", 0
+    
+    if not user.is_active:
+        return False, "Account is inactive", 0
+    
+    if not verify_password(password, user.password_hash):
+        return False, "Invalid username or password", 0
+    
+    return True, "Login successful", user.id

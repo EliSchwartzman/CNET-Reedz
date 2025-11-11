@@ -1,7 +1,8 @@
 """
 Command-line interface for testing the Reedz platform
+test test
 """
-from database import Database
+from supabase_db import SupabaseDatabase
 from auth import AuthManager
 from betting import BettingManager
 from scoring import ScoringManager
@@ -14,7 +15,7 @@ class ReedziCLI:
     """Command-line interface for Reedz platform"""
     
     def __init__(self):
-        self.db = Database()
+        self.db = SupabaseDatabase()
         self.auth = AuthManager(self.db)
         self.betting = BettingManager(self.db)
         self.scoring = ScoringManager(self.db)

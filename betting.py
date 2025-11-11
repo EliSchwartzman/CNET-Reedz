@@ -2,13 +2,13 @@
 Betting system logic
 """
 from typing import Tuple, List, Optional
-from database import Database
+from supabase_db import SupabaseDatabase
 from models import User, Bet, Prediction, BetStatus, AnswerType
 
 class BettingManager:
     """Handle betting operations"""
     
-    def __init__(self, db: Database):
+    def __init__(self, db: SupabaseDatabase):
         self.db = db
     
     def create_bet(self, user: User, title: str, description: str, 
