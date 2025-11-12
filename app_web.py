@@ -1,15 +1,14 @@
 import streamlit as st
+import pandas as pd
 from auth import login_user, register_user, hash_password
 from supabase_db import SupabaseDatabase
 from models import UserRole, BetStatus
 from datetime import datetime
 
 st.set_page_config(page_title="Reedz", layout="wide")
-
 db = SupabaseDatabase()
 
 # ==================== SESSION STATE ====================
-
 if "user" not in st.session_state:
     st.session_state.user = None
 if "user_id" not in st.session_state:
@@ -18,7 +17,6 @@ if "role" not in st.session_state:
     st.session_state.role = None
 
 # ==================== AUTHENTICATION ====================
-
 def logout():
     st.session_state.user = None
     st.session_state.user_id = None
@@ -27,12 +25,10 @@ def logout():
 
 def login_page():
     col1, col2 = st.columns(2)
-    
     with col1:
         st.header("Login")
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password", type="password", key="login_password")
-        
         if st.button("Login", key="login_button"):
             success, message, user_id = login_user(username, password)
             if success:
@@ -44,16 +40,13 @@ def login_page():
                 st.rerun()
             else:
                 st.error(message)
-    
     with col2:
         st.header("Register")
         new_username = st.text_input("Username", key="register_username")
         new_password = st.text_input("Password", type="password", key="register_password")
         confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
-        
         role = st.radio("Register as:", ["Member", "Admin"], horizontal=True, key="register_role")
         selected_role = UserRole.ADMIN if role == "Admin" else UserRole.MEMBER
-        
         if st.button("Register", key="register_button"):
             if new_password != confirm_password:
                 st.error("Passwords do not match")
@@ -66,48 +59,31 @@ def login_page():
 
 def member_page():
     """Member dashboard"""
-    st.header("🎯 Reedz - Member Dashboard")
-    
+    st.header("Reedz - Member Dashboard")
     user = db.get_user_by_id(st.session_state.user_id)
     col1, col2 = st.columns([2, 1])
-    
     with col1:
         st.subheader(f"Welcome, {user.username}!")
-    
     with col2:
         if st.button("Logout"):
             logout()
-    
     st.metric("Reedz Balance", user.reedz_balance)
-    
+
     st.subheader("Available Bets")
     open_bets = db.get_bets_by_status(BetStatus.OPEN)
-    
     if not open_bets:
         st.info("No open bets available")
     else:
-        for bet in open_bets:
-            with st.expander(f"Week {bet.week}: {bet.title}"):
-                st.write(bet.description)
-                
-                existing_prediction = db.get_prediction_by_user_bet(st.session_state.user_id, bet.id)
-                
-                if existing_prediction:
-                    st.info(f"✓ You predicted: **{existing_prediction.answer}**")
-                else:
-                    answer = st.radio("Your prediction:", ["YES", "NO", "UNKNOWN"], key=f"bet_{bet.id}")
-                    if st.button("Submit Prediction", key=f"submit_{bet.id}"):
-                        success, message, _ = db.create_prediction(bet.id, st.session_state.user_id, answer)
-                        if success:
-                            st.success("Prediction submitted!")
-                            st.rerun()
-                        else:
-                            st.error(message)
-    
+        bet_table = [{
+            "Week": bet.week,
+            "Title": bet.title,
+            "Description": bet.description,
+            "Status": bet.status.value
+        } for bet in open_bets]
+        st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
+
     st.subheader("Leaderboard")
     users = db.get_all_users()
-    
-    # Create leaderboard table
     leaderboard_data = []
     for idx, u in enumerate(users[:10], 1):
         leaderboard_data.append({
@@ -115,35 +91,28 @@ def member_page():
             "Username": u.username,
             "Reedz": u.reedz_balance
         })
-    
     if leaderboard_data:
-        st.dataframe(leaderboard_data, use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(leaderboard_data), use_container_width=True, hide_index=True)
     else:
         st.info("No users on leaderboard")
 
 def admin_page():
     """Admin dashboard - can do both admin and member functions"""
-    st.header("🔧 Reedz - Admin Dashboard")
-    
+    st.header("Reedz - Admin Dashboard")
     user = db.get_user_by_id(st.session_state.user_id)
     col1, col2 = st.columns([2, 1])
-    
     with col1:
         st.subheader(f"Welcome, Admin {user.username}!")
-    
     with col2:
         if st.button("Logout"):
             logout()
-    
     admin_tabs = st.tabs(["Create Bet", "Close Bet", "Resolve Bet", "User Management", "Member Features"])
-    
-    # Create Bet Tab
+
     with admin_tabs[0]:
         st.subheader("Create New Bet")
         week = st.number_input("Week", min_value=1, step=1)
         title = st.text_input("Bet Title")
         description = st.text_area("Description")
-        
         if st.button("Create Bet"):
             if not title:
                 st.error("Title is required")
@@ -153,18 +122,22 @@ def admin_page():
                     st.success(message)
                 else:
                     st.error(message)
-    
-    # Close Bet Tab
+
     with admin_tabs[1]:
         st.subheader("Close Bet")
         open_bets = db.get_bets_by_status(BetStatus.OPEN)
-        
         if not open_bets:
             st.info("No open bets")
         else:
+            bet_table = [{
+                "Week": b.week,
+                "Title": b.title,
+                "Description": b.description,
+                "Status": b.status.value
+            } for b in open_bets]
+            st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
             bet_options = {f"Week {b.week}: {b.title}": b.id for b in open_bets}
             selected_bet = st.selectbox("Select bet to close", list(bet_options.keys()))
-            
             if st.button("Close Bet"):
                 bet_id = bet_options[selected_bet]
                 success, message = db.close_bet(bet_id)
@@ -173,19 +146,23 @@ def admin_page():
                     st.rerun()
                 else:
                     st.error(message)
-    
-    # Resolve Bet Tab
+
     with admin_tabs[2]:
         st.subheader("Resolve Bet")
         closed_bets = db.get_bets_by_status(BetStatus.CLOSED)
-        
         if not closed_bets:
             st.info("No closed bets")
         else:
+            bet_table = [{
+                "Week": b.week,
+                "Title": b.title,
+                "Description": b.description,
+                "Status": b.status.value
+            } for b in closed_bets]
+            st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
             bet_options = {f"Week {b.week}: {b.title}": b.id for b in closed_bets}
             selected_bet = st.selectbox("Select bet to resolve", list(bet_options.keys()))
             correct_answer = st.radio("Correct answer:", ["YES", "NO", "UNKNOWN"])
-            
             if st.button("Resolve Bet"):
                 bet_id = bet_options[selected_bet]
                 success, message = db.resolve_bet(bet_id, correct_answer)
@@ -194,33 +171,27 @@ def admin_page():
                     st.rerun()
                 else:
                     st.error(message)
-    
-    # User Management Tab
+
     with admin_tabs[3]:
         st.subheader("User Management")
         users = db.get_all_users()
-        
         if not users:
             st.info("No active users")
         else:
-            # Create header row
             col1, col2, col3, col4, col5, col6 = st.columns(6)
             with col1:
-                st.write("**Username**")
+                st.write("Username")
             with col2:
-                st.write("**Role**")
+                st.write("Role")
             with col3:
-                st.write("**Balance**")
+                st.write("Balance")
             with col4:
-                st.write("**Set Balance**")
+                st.write("Set Balance")
             with col5:
-                st.write("**Promote/Demote**")
+                st.write("Promote/Demote")
             with col6:
-                st.write("**Delete**")
-            
+                st.write("Delete")
             st.divider()
-            
-            # User rows
             for u in users:
                 col1, col2, col3, col4, col5, col6 = st.columns(6)
                 with col1:
@@ -241,7 +212,7 @@ def admin_page():
                         difference = new_balance - u.reedz_balance
                         success, msg = db.update_user_reedz(u.id, difference)
                         if success:
-                            st.success("✓", icon="✅")
+                            st.success("✓")
                         else:
                             st.error(f"Error: {msg}")
                 with col5:
@@ -263,51 +234,35 @@ def admin_page():
                                 st.error(message)
                 with col6:
                     if st.button("Delete", key=f"del_{u.id}", type="secondary"):
-                        st.warning(f"⚠️ Delete **{u.username}**?")
+                        st.warning(f"Delete {u.username}?")
                         col_y, col_n = st.columns(2)
                         with col_y:
                             if st.button(f"Yes", key=f"confirm_del_{u.id}"):
                                 success, message = db.deactivate_user(u.id)
                                 if success:
-                                    st.success(f"Deleted ✓")
+                                    st.success("Deleted")
                                     st.rerun()
                                 else:
                                     st.error(message)
                         with col_n:
                             if st.button("No", key=f"cancel_del_{u.id}"):
                                 st.info("Cancelled")
-    
-    # Member Features Tab - Admin can do member functions
     with admin_tabs[4]:
         st.subheader("Make Predictions (Member Features)")
         st.write("As an admin, you can also participate in betting:")
-        
         open_bets = db.get_bets_by_status(BetStatus.OPEN)
-        
         if not open_bets:
             st.info("No open bets available")
         else:
-            for bet in open_bets:
-                with st.expander(f"Week {bet.week}: {bet.title}"):
-                    st.write(bet.description)
-                    
-                    existing_prediction = db.get_prediction_by_user_bet(st.session_state.user_id, bet.id)
-                    
-                    if existing_prediction:
-                        st.info(f"✓ You predicted: **{existing_prediction.answer}**")
-                    else:
-                        answer = st.radio("Your prediction:", ["YES", "NO", "UNKNOWN"], key=f"admin_bet_{bet.id}")
-                        if st.button("Submit Prediction", key=f"admin_submit_{bet.id}"):
-                            success, message, _ = db.create_prediction(bet.id, st.session_state.user_id, answer)
-                            if success:
-                                st.success("Prediction submitted!")
-                                st.rerun()
-                            else:
-                                st.error(message)
-        
+            bet_table = [{
+                "Week": bet.week,
+                "Title": bet.title,
+                "Description": bet.description,
+                "Status": bet.status.value
+            } for bet in open_bets]
+            st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
         st.subheader("Leaderboard")
         users = db.get_all_users()
-        
         leaderboard_data = []
         for idx, u in enumerate(users[:10], 1):
             leaderboard_data.append({
@@ -315,15 +270,13 @@ def admin_page():
                 "Username": u.username,
                 "Reedz": u.reedz_balance
             })
-        
         if leaderboard_data:
-            st.dataframe(leaderboard_data, use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame(leaderboard_data), use_container_width=True, hide_index=True)
 
 # ==================== MAIN APP ====================
-
 def main():
     if st.session_state.user is None:
-        st.title("🎯 Reedz")
+        st.title("Reedz")
         login_page()
     else:
         if st.session_state.role == UserRole.ADMIN:
