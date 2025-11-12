@@ -126,28 +126,28 @@ class SupabaseDatabase:
 
     # ==================== BET OPERATIONS ====================
 
-    def create_bet(self, week: int, title: str, description: str) -> Tuple[bool, str, Optional[int]]:
-        """Create a new bet"""
-        try:
-            response = supabase.table("bets").insert({
-                "week": week,
-                "title": title,
-                "description": description,
-                "status": BetStatus.OPEN.value,
-                "correct_answer": None,
-                "created_at": "now()",
-                "closed_at": None,
-                "resolved_at": None
-            }).execute()
-            
-            if response.data:
-                return True, "Bet created successfully", response.data[0]["id"]
-            return False, "Failed to create bet", None
-        except Exception as e:
-            return False, f"Error: {str(e)}", None
+    def create_bet(self, week: int, title: str, description: str, answer_type: str, creator_id: int) -> Tuple[bool, str, Optional[int]]:
+            """Create a new bet with answer_type"""
+            try:
+                response = supabase.table("bets").insert({
+                    "week": week,
+                    "title": title,
+                    "description": description,
+                    "answer_type": answer_type,
+                    "status": BetStatus.OPEN.value,
+                    "correct_answer": None,
+                    "created_at": "now()",
+                    "closed_at": None,
+                    "resolved_at": None,
+                    "creator_id": creator_id
+                }).execute()
+                if response.data:
+                    return True, "Bet created successfully", response.data[0]["id"]
+                return False, "Failed to create bet", None
+            except Exception as e:
+                return False, f"Error: {str(e)}", None
 
     def get_bet_by_id(self, bet_id: int) -> Optional[Bet]:
-        """Get bet by ID"""
         try:
             response = supabase.table("bets").select("*").eq("id", bet_id).execute()
             if response.data:
@@ -158,14 +158,14 @@ class SupabaseDatabase:
                     title=row["title"],
                     description=row["description"],
                     status=BetStatus(row["status"]),
+                    answer_type=AnswerType(row["answer_type"]),
                     correct_answer=row.get("correct_answer"),
                     created_at=row["created_at"],
                     closed_at=row.get("closed_at"),
                     resolved_at=row.get("resolved_at")
                 )
             return None
-        except Exception as e:
-            print(f"Error: {e}")
+        except Exception:
             return None
 
     def get_bets_by_status(self, status: BetStatus) -> List[Bet]:
