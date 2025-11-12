@@ -15,6 +15,8 @@ class AnswerType(Enum):
     YES = "yes"
     NO = "no"
     UNKNOWN = "unknown"
+    NUMERIC = "numeric"
+    TEXT = "text"
 
 @dataclass
 class User:
@@ -32,6 +34,7 @@ class Bet:
     title: str
     description: str
     status: BetStatus
+    answer_type: AnswerType
     correct_answer: Optional[str]
     created_at: str
     closed_at: Optional[str]
