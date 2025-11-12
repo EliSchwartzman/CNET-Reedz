@@ -61,7 +61,6 @@ def login_page():
                     st.error(message)
 
 def member_page():
-    """Member dashboard"""
     st.header("Reedz - Member Dashboard")
     user = db.get_user_by_id(st.session_state.user_id)
     col1, col2 = st.columns([2, 1])
@@ -74,8 +73,6 @@ def member_page():
 
     st.subheader("Available Bets")
     open_bets = db.get_bets_by_status(BetStatus.OPEN)
-
-    # Table of open bets
     if open_bets:
         bet_table = [{
             "Week": bet.week,
@@ -88,7 +85,6 @@ def member_page():
     else:
         st.info("No open bets available")
 
-    # Prediction widgets for each bet
     for bet in open_bets:
         existing_prediction = db.get_prediction_by_user_bet(st.session_state.user_id, bet.id)
         if existing_prediction:
