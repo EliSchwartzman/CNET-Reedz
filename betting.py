@@ -6,8 +6,7 @@ class BettingManager:
     def __init__(self, db: SupabaseDatabase):
         self.db = db
 
-    def create_bet(self, user: User, title: str, description: str,
-                   week: int, answer_type: AnswerType) -> Tuple[bool, str, Optional[int]]:
+    def create_bet(self, user: User, title: str, description: str, week: int, answer_type: AnswerType) -> Tuple[bool, str, Optional[int]]:
         if user.role != "admin" and user.role != UserRole.ADMIN:
             return False, "Only admin can create bets", None
         if not title or len(title) < 3:

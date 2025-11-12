@@ -150,7 +150,7 @@ def admin_page():
             if not title:
                 st.error("Title is required")
             else:
-                success, message, _ = db.create_bet(week, title, description, answer_type)
+                success, message, _ = db.create_bet(week, title, description, answer_type.value, user.id)
                 if success:
                     st.success(message)
                 else:
