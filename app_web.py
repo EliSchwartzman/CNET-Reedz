@@ -189,6 +189,7 @@ def admin_page():
     with admin_tabs[2]:
         st.subheader("Resolve Bet")
         closed_bets = db.get_bets_by_status(BetStatus.CLOSED)
+
         if closed_bets:
             bet_table = [{
                 "Week": b.week,
@@ -204,7 +205,6 @@ def admin_page():
             selected_bet = db.get_bet_by_id(selected_bet_id)
             bet_type = get_answer_type_enum(getattr(selected_bet, "answertype", None))
 
-            # Always compare the enum, do NOT compare to string
             if bet_type == AnswerType.NUMERIC:
                 correct_answer = st.text_input("Correct numeric answer:")
             elif bet_type == AnswerType.TEXT:
