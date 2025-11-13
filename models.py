@@ -2,20 +2,24 @@ from enum import Enum
 from dataclasses import dataclass
 from typing import Optional
 
+
 class UserRole(Enum):
     ADMIN = "admin"
     MEMBER = "member"
+
 
 class BetStatus(Enum):
     OPEN = "open"
     CLOSED = "closed"
     RESOLVED = "resolved"
 
+
 class AnswerType(Enum):
     YESNO = "yesno"
     NUMERIC = "numeric"
     TEXT = "text"
     UNKNOWN = "unknown"
+
 
 @dataclass
 class User:
@@ -26,12 +30,13 @@ class User:
     reedz_balance: int
     is_active: bool
 
+
 @dataclass
 class Bet:
     id: int
     week: int
     title: str
-    description: str
+    description: Optional[str]
     status: BetStatus
     answertype: AnswerType
     correct_answer: Optional[str]
@@ -39,6 +44,7 @@ class Bet:
     closed_at: Optional[str]
     resolved_at: Optional[str]
     creator_id: Optional[int]
+
 
 @dataclass
 class Prediction:

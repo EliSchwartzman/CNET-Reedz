@@ -147,54 +147,55 @@ class SupabaseDatabase:
             return False, f"Error: {str(e)}", None
 
     def get_bet_by_id(self, bet_id: int) -> Optional[Bet]:
+        response = supabase.table("bets").select("*").eq("id", bet_id).single().execute()
+        if response.error:
+            return None
+        row = response.data
         try:
-            response = supabase.table("bets").select("*").eq("id", bet_id).execute()
-            if response.data:
-                row = response.data[0]
-                return Bet(
-                    id=row["id"],
-                    week=row["week"],
-                    title=row["title"],
-                    description=row["description"],
-                    status=BetStatus(row["status"]),
-                    answer_type=AnswerType(row["answer_type"]),
-                    correct_answer=row.get("correct_answer"),
-                    created_at=row["created_at"],
-                    closed_at=row.get("closed_at"),
-                    resolved_at=row.get("resolved_at")
-                )
-            return None
+            answertype = AnswerType(row["answertype"])
         except Exception:
-            return None
+            answertype = AnswerType.UNKNOWN
+        bet_status = BetStatus(row["status"]) if row.get("status") else BetStatus.OPEN
+        return Bet(
+            id=row["id"],
+            week=row["week"],
+            title=row["title"],
+            description=row.get("description"),
+            status=bet_status,
+            answertype=answertype,
+            correct_answer=row.get("correct_answer"),
+            created_at=row.get("created_at"),
+            closed_at=row.get("closed_at"),
+            resolved_at=row.get("resolved_at"),
+            creator_id=row.get("creator_id")
+        )
 
     def get_bets_by_status(self, status: BetStatus) -> List[Bet]:
-        try:
-            response = supabase.table("bets").select("*").eq("status", status.value).order("created_at", desc=True).execute()
-            bets = []
-            for row in response.data:
-                # Safely convert string to Enum (default if unknown)
-                answertype_str = row["answertype"]
-                try:
-                    answertype = AnswerType(answertype_str)
-                except Exception:
-                    answertype = AnswerType.UNKNOWN
-                bets.append(Bet(
-                    id=row["id"],
-                    week=row["week"],
-                    title=row["title"],
-                    description=row.get("description"),
-                    answertype=answertype,
-                    status=BetStatus(row["status"]),
-                    correct_answer=row.get("correct_answer"),
-                    created_at=row["created_at"],
-                    closed_at=row.get("closed_at"),
-                    resolved_at=row.get("resolved_at"),
-                    creator_id=row.get("creator_id")
-                ))
-            return bets
-        except Exception as e:
-            print(f"Error: {e}")
+        response = supabase.table("bets").select("*").eq("status", status.value).order("created_at", desc=True).execute()
+        if response.error:
+            print("Error fetching bets:", response.error)
             return []
+        bets = []
+        for row in response.data:
+            try:
+                answertype = AnswerType(row["answertype"])  # safe conversion
+            except Exception:
+                answertype = AnswerType.UNKNOWN
+            bet_status = BetStatus(row["status"]) if row.get("status") else BetStatus.OPEN
+            bets.append(Bet(
+                id=row["id"],
+                week=row["week"],
+                title=row["title"],
+                description=row.get("description"),
+                status=bet_status,
+                answertype=answertype,
+                correct_answer=row.get("correct_answer"),
+                created_at=row.get("created_at"),
+                closed_at=row.get("closed_at"),
+                resolved_at=row.get("resolved_at"),
+                creator_id=row.get("creator_id")
+            ))
+        return bets
 
     def get_all_bets(self) -> List[Bet]:
         """Get all bets"""
@@ -230,16 +231,18 @@ class SupabaseDatabase:
             return False, f"Error: {str(e)}"
 
     def resolve_bet(self, bet_id: int, correct_answer: str) -> Tuple[bool, str]:
-        """Resolve a bet with the correct answer"""
         try:
-            supabase.table("bets").update({
-                "status": BetStatus.RESOLVED.value,
+            # Update bet with correct_answer and status 'resolved'
+            response = supabase.table("bets").update({
                 "correct_answer": correct_answer,
+                "status": BetStatus.RESOLVED.value,
                 "resolved_at": "now()"
             }).eq("id", bet_id).execute()
-            return True, "Bet resolved"
+            if response.error:
+                return False, response.error.message
+            return True, "Bet resolved successfully"
         except Exception as e:
-            return False, f"Error: {str(e)}"
+            return False, str(e)
 
     # ==================== PREDICTION OPERATIONS ====================
 

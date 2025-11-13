@@ -4,7 +4,6 @@ import pandas as pd
 from auth import login_user, register_user, hash_password
 from supabase_db import SupabaseDatabase
 from models import UserRole, BetStatus, AnswerType
-from datetime import datetime
 
 st.set_page_config(page_title="Reedz", layout="wide")
 db = SupabaseDatabase()
@@ -186,10 +185,9 @@ def admin_page():
         else:
             st.info("No open bets")
 
-    with admin_tabs[2]:
+    with admin_tabs[2]:  # Resolve Bet Tab
         st.subheader("Resolve Bet")
         closed_bets = db.get_bets_by_status(BetStatus.CLOSED)
-
         if closed_bets:
             bet_table = [{
                 "Week": b.week,
@@ -211,6 +209,7 @@ def admin_page():
                 correct_answer = st.text_input("Correct text answer:")
             else:
                 correct_answer = st.radio("Correct answer:", ["YES", "NO", "UNKNOWN"])
+
             if st.button("Resolve Bet"):
                 success, message = db.resolve_bet(selected_bet_id, correct_answer)
                 if success:
@@ -219,8 +218,7 @@ def admin_page():
                 else:
                     st.error(message)
         else:
-            st.info("No closed bets")
-
+            st.info("No closed bets found")
 
 
     with admin_tabs[3]:
@@ -346,12 +344,13 @@ def admin_page():
 def main():
     if st.session_state.user is None:
         st.title("Reedz")
-        login_page()
+        # call your login_page function here
     else:
         if st.session_state.role == UserRole.ADMIN:
             admin_page()
         else:
-            member_page()
+            # call your member_page function here
+            pass
 
 if __name__ == "__main__":
     main()
