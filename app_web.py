@@ -57,6 +57,8 @@ def login_page():
                     st.error(message)
 
 def get_answer_type_enum(answertype_field):
+    if answertype_field is None:
+        return AnswerType.UNKNOWN
     if isinstance(answertype_field, AnswerType):
         return answertype_field
     try:
@@ -83,7 +85,7 @@ def member_page():
             "Week": bet.week,
             "Title": bet.title,
             "Description": bet.description,
-            "Type": get_answer_type_enum(bet.answertype).value,
+            "Type": get_answer_type_enum(getattr(bet, "answertype", None)).value,
             "Status": bet.status.value
         } for bet in open_bets]
         st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
@@ -91,7 +93,7 @@ def member_page():
         st.info("No open bets available")
 
     for bet in open_bets:
-        bet_type = get_answer_type_enum(bet.answertype)
+        bet_type = get_answer_type_enum(getattr(bet, "answertype", None))
         existing_prediction = db.get_prediction_by_user_bet(st.session_state.user_id, bet.id)
         if existing_prediction:
             st.info(f"You predicted: {existing_prediction.answer} for '{bet.title}' (Week {bet.week})")
@@ -167,7 +169,7 @@ def admin_page():
                 "Week": b.week,
                 "Title": b.title,
                 "Description": b.description,
-                "Type": get_answer_type_enum(b.answertype).value,
+                "Type": get_answer_type_enum(getattr(b, "answertype", None)).value,
                 "Status": b.status.value
             } for b in open_bets]
             st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
@@ -192,14 +194,14 @@ def admin_page():
                 "Week": b.week,
                 "Title": b.title,
                 "Description": b.description,
-                "Type": get_answer_type_enum(b.answertype).value,
+                "Type": get_answer_type_enum(getattr(b, "answertype", None)).value,
                 "Status": b.status.value
             } for b in closed_bets]
             st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
             bet_options = {f"Week {b.week}: {b.title}": b.id for b in closed_bets}
             selected_bet = st.selectbox("Select bet to resolve", list(bet_options.keys()))
             bet = db.get_bet_by_id(bet_options[selected_bet])
-            bet_type = get_answer_type_enum(bet.answertype)
+            bet_type = get_answer_type_enum(getattr(bet, "answertype", None))
             if bet_type == AnswerType.NUMERIC:
                 correct_answer = st.text_input("Correct numeric answer:")
             elif bet_type == AnswerType.TEXT:
@@ -298,12 +300,12 @@ def admin_page():
                 "Week": bet.week,
                 "Title": bet.title,
                 "Description": bet.description,
-                "Type": get_answer_type_enum(bet.answertype).value,
+                "Type": get_answer_type_enum(getattr(bet, "answertype", None)).value,
                 "Status": bet.status.value
             } for bet in open_bets]
             st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
             for bet in open_bets:
-                bet_type = get_answer_type_enum(bet.answertype)
+                bet_type = get_answer_type_enum(getattr(bet, "answertype", None))
                 existing_prediction = db.get_prediction_by_user_bet(st.session_state.user_id, bet.id)
                 if existing_prediction:
                     st.info(f"You predicted: {existing_prediction.answer} for '{bet.title}' (Week {bet.week})")
@@ -337,7 +339,6 @@ def admin_page():
         if leaderboard_data:
             st.dataframe(pd.DataFrame(leaderboard_data), use_container_width=True, hide_index=True)
 
-
 def main():
     if st.session_state.user is None:
         st.title("Reedz")
@@ -347,7 +348,6 @@ def main():
             admin_page()
         else:
             member_page()
-
 
 if __name__ == "__main__":
     main()
