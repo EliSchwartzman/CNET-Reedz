@@ -13,7 +13,7 @@ class BettingManager:
             return False, "Title must be at least 3 characters", None
         if week < 1:
             return False, "Invalid week number", None
-        return self.db.create_bet(week, title, description, answer_type.value, user.id)
+        return self.db.create_bet(week, title, description, answertype.value, user.id)
 
     def submit_prediction(self, user: User, bet_id: int, answer: str) -> Tuple[bool, str]:
         bet = self.db.get_bet_by_id(bet_id)
