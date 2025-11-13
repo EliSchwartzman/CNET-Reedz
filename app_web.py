@@ -1,3 +1,4 @@
+# app_web.py
 import streamlit as st
 import pandas as pd
 
@@ -20,6 +21,16 @@ def logout():
     st.session_state.user_id = None
     st.session_state.role = None
     st.rerun()
+
+def get_answer_type_enum(answertype_field):
+    if answertype_field is None:
+        return AnswerType.UNKNOWN
+    if isinstance(answertype_field, AnswerType):
+        return answertype_field
+    try:
+        return AnswerType(answertype_field.lower())
+    except Exception:
+        return AnswerType.UNKNOWN
 
 def login_page():
     col1, col2 = st.columns(2)
@@ -55,16 +66,6 @@ def login_page():
                 else:
                     st.error(message)
 
-def get_answer_type_enum(answertype_field):
-    if answertype_field is None:
-        return AnswerType.UNKNOWN
-    if isinstance(answertype_field, AnswerType):
-        return answertype_field
-    try:
-        return AnswerType(answertype_field)
-    except Exception:
-        return AnswerType.UNKNOWN
-
 def member_page():
     st.header("Reedz - Member Dashboard")
     user = db.get_user_by_id(st.session_state.user_id)
@@ -78,7 +79,6 @@ def member_page():
 
     st.subheader("Available Bets")
     open_bets = db.get_bets_by_status(BetStatus.OPEN)
-
     if open_bets:
         bet_table = [{
             "Week": bet.week,
@@ -185,7 +185,7 @@ def admin_page():
         else:
             st.info("No open bets")
 
-    with admin_tabs[2]:  # Resolve Bet Tab
+    with admin_tabs[2]:
         st.subheader("Resolve Bet")
         closed_bets = db.get_bets_by_status(BetStatus.CLOSED)
         if closed_bets:
@@ -218,8 +218,7 @@ def admin_page():
                 else:
                     st.error(message)
         else:
-            st.info("No closed bets found")
-
+            st.info("No closed bets")
 
     with admin_tabs[3]:
         st.subheader("User Management")
@@ -244,11 +243,11 @@ def admin_page():
             for u in users:
                 col1, col2, col3, col4, col5, col6 = st.columns(6)
                 with col1:
-                    st.write(f"{u.username}")
+                    st.write(u.username)
                 with col2:
-                    st.write(f"{u.role.value}")
+                    st.write(u.role.value)
                 with col3:
-                    st.write(f"{u.reedz_balance}")
+                    st.write(u.reedz_balance)
                 with col4:
                     new_balance = st.number_input(
                         f"Balance for {u.username}", value=u.reedz_balance,
@@ -344,13 +343,12 @@ def admin_page():
 def main():
     if st.session_state.user is None:
         st.title("Reedz")
-        # call your login_page function here
+        login_page()
     else:
         if st.session_state.role == UserRole.ADMIN:
             admin_page()
         else:
-            # call your member_page function here
-            pass
+            member_page()
 
 if __name__ == "__main__":
     main()
