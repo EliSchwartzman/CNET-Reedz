@@ -70,15 +70,14 @@ def member_page():
     st.metric("Reedz Balance", user.reedz_balance)
     st.subheader("Available Bets")
     open_bets = db.get_bets_by_status(BetStatus.OPEN)
-    # Header for bets table
     if open_bets:
         bet_table = [{
-        "Week": bet.week,
-        "Title": bet.title,
-        "Description": bet.description,
-        "Type": bet.answertype.value,   # <-- CORRECT
-        "Status": bet.status.value
-    } for bet in open_bets]
+            "Week": bet.week,
+            "Title": bet.title,
+            "Description": bet.description,
+            "Type": bet.answertype.value,
+            "Status": bet.status.value
+        } for bet in open_bets]
         st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
     else:
         st.info("No open bets available")
@@ -88,9 +87,9 @@ def member_page():
             st.info(f"You predicted: {existing_prediction.answer} for '{bet.title}' (Week {bet.week})")
         else:
             st.write(f"Prediction for '{bet.title}' (Week {bet.week})")
-            if bet.answertype.value == "numeric":
+            if bet.answertype == AnswerType.NUMERIC:
                 answer = st.text_input("Enter your numeric prediction:", key=f"bet_{bet.id}_numeric")
-            elif bet.answertype.value == "text":
+            elif bet.answertype == AnswerType.TEXT:
                 answer = st.text_input("Enter your text prediction:", key=f"bet_{bet.id}_text")
             else:
                 answer = st.radio("Your prediction:", ["YES", "NO", "UNKNOWN"], key=f"bet_{bet.id}_choice")

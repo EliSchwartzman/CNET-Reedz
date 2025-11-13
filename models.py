@@ -34,11 +34,12 @@ class Bet:
     title: str
     description: str
     status: BetStatus
-    answer_type: AnswerType
+    answertype: AnswerType
     correct_answer: Optional[str]
     created_at: str
     closed_at: Optional[str]
     resolved_at: Optional[str]
+    creator_id: Optional[int]
 
 @dataclass
 class Prediction:
