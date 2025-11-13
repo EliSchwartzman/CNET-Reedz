@@ -126,26 +126,26 @@ class SupabaseDatabase:
 
     # ==================== BET OPERATIONS ====================
 
-    def create_bet(self, week: int, title: str, description: str, answer_type: str, creator_id: int) -> Tuple[bool, str, Optional[int]]:
-            """Create a new bet with answer_type"""
-            try:
-                response = supabase.table("bets").insert({
-                    "week": week,
-                    "title": title,
-                    "description": description,
-                    "answer_type": answer_type,
-                    "status": BetStatus.OPEN.value,
-                    "correct_answer": None,
-                    "created_at": "now()",
-                    "closed_at": None,
-                    "resolved_at": None,
-                    "creator_id": creator_id
-                }).execute()
-                if response.data:
-                    return True, "Bet created successfully", response.data[0]["id"]
-                return False, "Failed to create bet", None
-            except Exception as e:
-                return False, f"Error: {str(e)}", None
+    def create_bet(self, week: int, title: str, description: str, answertype: str, creatorid: int) -> Tuple[bool, str, Optional[int]]:
+        try:
+            response = supabase.table("bets").insert({
+                "week": week,
+                "title": title,
+                "description": description,
+                "answertype": answertype,
+                "status": BetStatus.OPEN.value,
+                "correctanswer": None,
+                "createdat": "now()",
+                "closedat": None,
+                "resolvedat": None,
+                "creatorid": creatorid
+            }).execute()
+            if response.data:
+                return True, "Bet created successfully", response.data[0]["id"]
+            return False, "Failed to create bet", None
+        except Exception as e:
+            return False, f"Error: {str(e)}", None
+
 
     def get_bet_by_id(self, bet_id: int) -> Optional[Bet]:
         try:
