@@ -6,10 +6,11 @@ from supabase_db import SupabaseDatabase
 from models import UserRole, BetStatus, AnswerType
 from datetime import datetime
 
+
 st.set_page_config(page_title="Reedz", layout="wide")
 db = SupabaseDatabase()
 
-# ==================== SESSION STATE ====================
+
 if "user" not in st.session_state:
     st.session_state.user = None
 if "user_id" not in st.session_state:
@@ -17,15 +18,17 @@ if "user_id" not in st.session_state:
 if "role" not in st.session_state:
     st.session_state.role = None
 
-# ==================== AUTHENTICATION ====================
+
 def logout():
     st.session_state.user = None
     st.session_state.user_id = None
     st.session_state.role = None
     st.rerun()
 
+
 def login_page():
     col1, col2 = st.columns(2)
+
     with col1:
         st.header("Login")
         username = st.text_input("Username", key="login_username")
@@ -41,6 +44,7 @@ def login_page():
                 st.rerun()
             else:
                 st.error(message)
+
     with col2:
         st.header("Register")
         new_username = st.text_input("Username", key="register_username")
@@ -58,6 +62,16 @@ def login_page():
                 else:
                     st.error(message)
 
+
+def get_answer_type_enum(answertype_field):
+    if isinstance(answertype_field, AnswerType):
+        return answertype_field
+    try:
+        return AnswerType(answertype_field)
+    except Exception:
+        return AnswerType.UNKNOWN
+
+
 def member_page():
     st.header("Reedz - Member Dashboard")
     user = db.get_user_by_id(st.session_state.user_id)
@@ -68,30 +82,34 @@ def member_page():
         if st.button("Logout"):
             logout()
     st.metric("Reedz Balance", user.reedz_balance)
+
     st.subheader("Available Bets")
     open_bets = db.get_bets_by_status(BetStatus.OPEN)
+
     if open_bets:
         bet_table = [{
             "Week": bet.week,
             "Title": bet.title,
             "Description": bet.description,
-            "Type": bet.answertype.value,
+            "Type": get_answer_type_enum(bet.answertype).value,
             "Status": bet.status.value
         } for bet in open_bets]
         st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
     else:
         st.info("No open bets available")
+
     for bet in open_bets:
+        bet_type = get_answer_type_enum(bet.answertype)
         existing_prediction = db.get_prediction_by_user_bet(st.session_state.user_id, bet.id)
         if existing_prediction:
             st.info(f"You predicted: {existing_prediction.answer} for '{bet.title}' (Week {bet.week})")
         else:
             st.write(f"Prediction for '{bet.title}' (Week {bet.week})")
-            if bet.answertype == AnswerType.NUMERIC:
+            if bet_type == AnswerType.NUMERIC:
                 answer = st.text_input("Enter your numeric prediction:", key=f"bet_{bet.id}_numeric")
-            elif bet.answertype == AnswerType.TEXT:
+            elif bet_type == AnswerType.TEXT:
                 answer = st.text_input("Enter your text prediction:", key=f"bet_{bet.id}_text")
-            elif bet.answertype == AnswerType.YESNO or bet.answertype == AnswerType.UNKNOWN:
+            else:
                 answer = st.radio("Your prediction:", ["YES", "NO", "UNKNOWN"], key=f"bet_{bet.id}_choice")
             if st.button("Submit Prediction", key=f"submit_{bet.id}"):
                 success, message, _ = db.create_prediction(bet.id, st.session_state.user_id, answer)
@@ -100,6 +118,7 @@ def member_page():
                     st.rerun()
                 else:
                     st.error(message)
+
     st.subheader("Leaderboard")
     users = db.get_all_users()
     leaderboard_data = []
@@ -114,6 +133,7 @@ def member_page():
     else:
         st.info("No users on leaderboard")
 
+
 def admin_page():
     st.header("Reedz - Admin Dashboard")
     user = db.get_user_by_id(st.session_state.user_id)
@@ -123,7 +143,9 @@ def admin_page():
     with col2:
         if st.button("Logout"):
             logout()
+
     admin_tabs = st.tabs(["Create Bet", "Close Bet", "Resolve Bet", "User Management", "Member Features"])
+
     # Create Bet Tab
     with admin_tabs[0]:
         st.subheader("Create New Bet")
@@ -146,6 +168,7 @@ def admin_page():
                     st.success(message)
                 else:
                     st.error(message)
+
     # Close Bet Tab
     with admin_tabs[1]:
         st.subheader("Close Bet")
@@ -155,7 +178,7 @@ def admin_page():
                 "Week": b.week,
                 "Title": b.title,
                 "Description": b.description,
-                "Type": b.answertype.value,
+                "Type": get_answer_type_enum(b.answertype).value,
                 "Status": b.status.value
             } for b in open_bets]
             st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
@@ -171,6 +194,7 @@ def admin_page():
                     st.error(message)
         else:
             st.info("No open bets")
+
     # Resolve Bet Tab
     with admin_tabs[2]:
         st.subheader("Resolve Bet")
@@ -180,16 +204,17 @@ def admin_page():
                 "Week": b.week,
                 "Title": b.title,
                 "Description": b.description,
-                "Type": b.answertype.value,
+                "Type": get_answer_type_enum(b.answertype).value,
                 "Status": b.status.value
             } for b in closed_bets]
             st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
             bet_options = {f"Week {b.week}: {b.title}": b.id for b in closed_bets}
             selected_bet = st.selectbox("Select bet to resolve", list(bet_options.keys()))
             bet = db.get_bet_by_id(bet_options[selected_bet])
-            if bet.answertype.value == "numeric":
+            bet_type = get_answer_type_enum(bet.answertype)
+            if bet_type == AnswerType.NUMERIC:
                 correct_answer = st.text_input("Correct numeric answer:")
-            elif bet.answertype.value == "text":
+            elif bet_type == AnswerType.TEXT:
                 correct_answer = st.text_input("Correct text answer:")
             else:
                 correct_answer = st.radio("Correct answer:", ["YES", "NO", "UNKNOWN"])
@@ -203,6 +228,7 @@ def admin_page():
                     st.error(message)
         else:
             st.info("No closed bets")
+
     # User Management Tab
     with admin_tabs[3]:
         st.subheader("User Management")
@@ -275,7 +301,8 @@ def admin_page():
                         with col_n:
                             if st.button("No", key=f"cancel_del_{u.id}"):
                                 st.info("Cancelled")
-    # Member Features Tab (admin can participate like a member)
+
+    # Admin Member Features (Admins can do member stuff also)
     with admin_tabs[4]:
         st.subheader("Make Predictions (Member Features)")
         st.write("As an admin, you can also participate in betting:")
@@ -285,19 +312,20 @@ def admin_page():
                 "Week": bet.week,
                 "Title": bet.title,
                 "Description": bet.description,
-                "Type": bet.answertype.value,
+                "Type": get_answer_type_enum(bet.answertype).value,
                 "Status": bet.status.value
             } for bet in open_bets]
             st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
             for bet in open_bets:
+                bet_type = get_answer_type_enum(bet.answertype)
                 existing_prediction = db.get_prediction_by_user_bet(st.session_state.user_id, bet.id)
                 if existing_prediction:
                     st.info(f"You predicted: {existing_prediction.answer} for '{bet.title}' (Week {bet.week})")
                 else:
                     st.write(f"Prediction for '{bet.title}' (Week {bet.week})")
-                    if bet.answertype.value == "numeric":
+                    if bet_type == AnswerType.NUMERIC:
                         answer = st.text_input("Enter your numeric prediction:", key=f"admin_bet_{bet.id}_numeric")
-                    elif bet.answertype.value == "text":
+                    elif bet_type == AnswerType.TEXT:
                         answer = st.text_input("Enter your text prediction:", key=f"admin_bet_{bet.id}_text")
                     else:
                         answer = st.radio("Your prediction:", ["YES", "NO", "UNKNOWN"], key=f"admin_bet_{bet.id}_choice")
@@ -310,6 +338,7 @@ def admin_page():
                             st.error(message)
         else:
             st.info("No open bets available")
+
         st.subheader("Leaderboard")
         users = db.get_all_users()
         leaderboard_data = []
@@ -322,7 +351,7 @@ def admin_page():
         if leaderboard_data:
             st.dataframe(pd.DataFrame(leaderboard_data), use_container_width=True, hide_index=True)
 
-# ==================== MAIN APP ====================
+
 def main():
     if st.session_state.user is None:
         st.title("Reedz")
@@ -332,6 +361,7 @@ def main():
             admin_page()
         else:
             member_page()
+
 
 if __name__ == "__main__":
     main()
