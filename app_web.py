@@ -6,10 +6,8 @@ from supabase_db import SupabaseDatabase
 from models import UserRole, BetStatus, AnswerType
 from datetime import datetime
 
-
 st.set_page_config(page_title="Reedz", layout="wide")
 db = SupabaseDatabase()
-
 
 if "user" not in st.session_state:
     st.session_state.user = None
@@ -28,7 +26,6 @@ def logout():
 
 def login_page():
     col1, col2 = st.columns(2)
-
     with col1:
         st.header("Login")
         username = st.text_input("Username", key="login_username")
@@ -44,7 +41,6 @@ def login_page():
                 st.rerun()
             else:
                 st.error(message)
-
     with col2:
         st.header("Register")
         new_username = st.text_input("Username", key="register_username")
@@ -85,7 +81,6 @@ def member_page():
 
     st.subheader("Available Bets")
     open_bets = db.get_bets_by_status(BetStatus.OPEN)
-
     if open_bets:
         bet_table = [{
             "Week": bet.week,
@@ -146,7 +141,6 @@ def admin_page():
 
     admin_tabs = st.tabs(["Create Bet", "Close Bet", "Resolve Bet", "User Management", "Member Features"])
 
-    # Create Bet Tab
     with admin_tabs[0]:
         st.subheader("Create New Bet")
         week = st.number_input("Week", min_value=1, step=1)
@@ -169,7 +163,6 @@ def admin_page():
                 else:
                     st.error(message)
 
-    # Close Bet Tab
     with admin_tabs[1]:
         st.subheader("Close Bet")
         open_bets = db.get_bets_by_status(BetStatus.OPEN)
@@ -195,7 +188,6 @@ def admin_page():
         else:
             st.info("No open bets")
 
-    # Resolve Bet Tab
     with admin_tabs[2]:
         st.subheader("Resolve Bet")
         closed_bets = db.get_bets_by_status(BetStatus.CLOSED)
@@ -229,7 +221,6 @@ def admin_page():
         else:
             st.info("No closed bets")
 
-    # User Management Tab
     with admin_tabs[3]:
         st.subheader("User Management")
         users = db.get_all_users()
@@ -302,7 +293,6 @@ def admin_page():
                             if st.button("No", key=f"cancel_del_{u.id}"):
                                 st.info("Cancelled")
 
-    # Admin Member Features (Admins can do member stuff also)
     with admin_tabs[4]:
         st.subheader("Make Predictions (Member Features)")
         st.write("As an admin, you can also participate in betting:")
