@@ -16,13 +16,11 @@ if "user_id" not in st.session_state:
 if "role" not in st.session_state:
     st.session_state.role = None
 
-
 def logout():
     st.session_state.user = None
     st.session_state.user_id = None
     st.session_state.role = None
     st.rerun()
-
 
 def login_page():
     col1, col2 = st.columns(2)
@@ -58,7 +56,6 @@ def login_page():
                 else:
                     st.error(message)
 
-
 def get_answer_type_enum(answertype_field):
     if isinstance(answertype_field, AnswerType):
         return answertype_field
@@ -66,7 +63,6 @@ def get_answer_type_enum(answertype_field):
         return AnswerType(answertype_field)
     except Exception:
         return AnswerType.UNKNOWN
-
 
 def member_page():
     st.header("Reedz - Member Dashboard")
@@ -81,6 +77,7 @@ def member_page():
 
     st.subheader("Available Bets")
     open_bets = db.get_bets_by_status(BetStatus.OPEN)
+
     if open_bets:
         bet_table = [{
             "Week": bet.week,
@@ -127,7 +124,6 @@ def member_page():
         st.dataframe(pd.DataFrame(leaderboard_data), use_container_width=True, hide_index=True)
     else:
         st.info("No users on leaderboard")
-
 
 def admin_page():
     st.header("Reedz - Admin Dashboard")
