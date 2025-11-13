@@ -204,7 +204,7 @@ def admin_page():
             selected_bet = db.get_bet_by_id(selected_bet_id)
             bet_type = get_answer_type_enum(getattr(selected_bet, "answertype", None))
 
-            # Only show the form for the selected bet!
+            # Always compare the enum, do NOT compare to string
             if bet_type == AnswerType.NUMERIC:
                 correct_answer = st.text_input("Correct numeric answer:")
             elif bet_type == AnswerType.TEXT:
@@ -220,6 +220,7 @@ def admin_page():
                     st.error(message)
         else:
             st.info("No closed bets")
+
 
 
     with admin_tabs[3]:
