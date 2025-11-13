@@ -73,12 +73,12 @@ def member_page():
     # Header for bets table
     if open_bets:
         bet_table = [{
-            "Week": bet.week,
-            "Title": bet.title,
-            "Description": bet.description,
-            "Type": bet.answertype.value,
-            "Status": bet.status.value
-        } for bet in open_bets]
+        "Week": bet.week,
+        "Title": bet.title,
+        "Description": bet.description,
+        "Type": bet.answertype.value,   # <-- CORRECT
+        "Status": bet.status.value
+    } for bet in open_bets]
         st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
     else:
         st.info("No open bets available")

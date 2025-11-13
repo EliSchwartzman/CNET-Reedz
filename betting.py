@@ -23,7 +23,7 @@ class BettingManager:
             return False, "This bet is no longer accepting predictions"
         if not answer or len(answer.strip()) == 0:
             return False, "Answer cannot be empty"
-        if bet.answer_type == AnswerType.NUMERIC or bet.answer_type == "numeric":
+        if bet.answertype == AnswerType.NUMERIC or bet.answertype == "numeric":
             try:
                 float(answer.strip())
             except ValueError:

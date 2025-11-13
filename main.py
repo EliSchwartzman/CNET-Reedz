@@ -110,7 +110,7 @@ class ReedziCLI:
             print(f"ID: {bet.id}")
             print(f"Week {bet.week}: {bet.title}")
             print(f"Description: {bet.description}")
-            print(f"Answer Type: {bet.answer_type.value}")
+            print(f"Answer Type: {bet.answertype.value}")
 
     def submit_prediction(self):
         print("\n--- Submit Prediction ---")
@@ -120,7 +120,7 @@ class ReedziCLI:
             return
         print("\nAvailable Bets:")
         for bet in bets:
-            print(f" ID {bet.id}: Week {bet.week} - {bet.title} ({bet.answer_type.value})")
+            print(f" ID {bet.id}: Week {bet.week} - {bet.title} ({bet.answertype.value})")
         betid = input("Enter Bet ID: ").strip()
         if not betid.isdigit():
             print("Invalid bet ID")
@@ -129,9 +129,9 @@ class ReedziCLI:
         if not bet:
             print("Bet not found.")
             return
-        if bet.answer_type == AnswerType.NUMERIC:
+        if bet.answertype == AnswerType.NUMERIC:
             answer = input("Your prediction (enter number): ").strip()
-        elif bet.answer_type == AnswerType.TEXT:
+        elif bet.answertype == AnswerType.TEXT:
             answer = input("Your prediction (enter text): ").strip()
         else:
             answer = input("Your prediction (YES/NO/UNKNOWN): ").strip()
@@ -226,7 +226,7 @@ class ReedziCLI:
         bet = summary['bet']
         print(f"\n{'='*50}")
         print(f"Bet: {bet.title}")
-        print(f"Answer Type: {bet.answer_type.value}")
+        print(f"Answer Type: {bet.answertype.value}")
         print(f"Total Predictions: {summary['total_predictions']}")
         print("\nPredictions:")
         for pred in summary['predictions']:

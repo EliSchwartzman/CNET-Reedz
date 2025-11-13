@@ -42,7 +42,7 @@ class ScoringManager:
             return True, "Bet resolved (no predictions)", {}
         
         # Calculate scores
-        scores = self._calculate_scores(predictions, correct_answer, bet.answer_type)
+        scores = self._calculate_scores(predictions, correct_answer, bet.answertype)
         
         # Distribute Reedz and update predictions
         total_distributed = 0
