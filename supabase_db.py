@@ -172,12 +172,18 @@ class SupabaseDatabase:
             response = supabase.table("bets").select("*").eq("status", status.value).order("created_at", desc=True).execute()
             bets = []
             for row in response.data:
+                # Safely convert string to Enum (default if unknown)
+                answertype_str = row["answertype"]
+                try:
+                    answertype = AnswerType(answertype_str)
+                except Exception:
+                    answertype = AnswerType.UNKNOWN
                 bets.append(Bet(
                     id=row["id"],
                     week=row["week"],
                     title=row["title"],
                     description=row.get("description"),
-                    answertype=AnswerType(row["answertype"]),
+                    answertype=answertype,
                     status=BetStatus(row["status"]),
                     correct_answer=row.get("correct_answer"),
                     created_at=row["created_at"],

@@ -91,7 +91,7 @@ def member_page():
                 answer = st.text_input("Enter your numeric prediction:", key=f"bet_{bet.id}_numeric")
             elif bet.answertype == AnswerType.TEXT:
                 answer = st.text_input("Enter your text prediction:", key=f"bet_{bet.id}_text")
-            else:
+            elif bet.answertype == AnswerType.YESNO or bet.answertype == AnswerType.UNKNOWN:
                 answer = st.radio("Your prediction:", ["YES", "NO", "UNKNOWN"], key=f"bet_{bet.id}_choice")
             if st.button("Submit Prediction", key=f"submit_{bet.id}"):
                 success, message, _ = db.create_prediction(bet.id, st.session_state.user_id, answer)

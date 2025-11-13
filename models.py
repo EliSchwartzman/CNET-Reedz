@@ -12,11 +12,10 @@ class BetStatus(Enum):
     RESOLVED = "resolved"
 
 class AnswerType(Enum):
-    YES = "yes"
-    NO = "no"
-    UNKNOWN = "unknown"
+    YESNO = "yesno"
     NUMERIC = "numeric"
     TEXT = "text"
+    UNKNOWN = "unknown"
 
 @dataclass
 class User:
