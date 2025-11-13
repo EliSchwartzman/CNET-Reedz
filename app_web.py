@@ -199,9 +199,12 @@ def admin_page():
             } for b in closed_bets]
             st.dataframe(pd.DataFrame(bet_table), use_container_width=True, hide_index=True)
             bet_options = {f"Week {b.week}: {b.title}": b.id for b in closed_bets}
-            selected_bet = st.selectbox("Select bet to resolve", list(bet_options.keys()))
-            bet = db.get_bet_by_id(bet_options[selected_bet])
-            bet_type = get_answer_type_enum(getattr(bet, "answertype", None))
+            selected_bet_title = st.selectbox("Select bet to resolve", list(bet_options.keys()))
+            selected_bet_id = bet_options[selected_bet_title]
+            selected_bet = db.get_bet_by_id(selected_bet_id)
+            bet_type = get_answer_type_enum(getattr(selected_bet, "answertype", None))
+
+            # Only show the form for the selected bet!
             if bet_type == AnswerType.NUMERIC:
                 correct_answer = st.text_input("Correct numeric answer:")
             elif bet_type == AnswerType.TEXT:
@@ -209,8 +212,7 @@ def admin_page():
             else:
                 correct_answer = st.radio("Correct answer:", ["YES", "NO", "UNKNOWN"])
             if st.button("Resolve Bet"):
-                bet_id = bet_options[selected_bet]
-                success, message = db.resolve_bet(bet_id, correct_answer)
+                success, message = db.resolve_bet(selected_bet_id, correct_answer)
                 if success:
                     st.success(message)
                     st.rerun()
@@ -218,6 +220,7 @@ def admin_page():
                     st.error(message)
         else:
             st.info("No closed bets")
+
 
     with admin_tabs[3]:
         st.subheader("User Management")
