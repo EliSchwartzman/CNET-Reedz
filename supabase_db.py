@@ -261,17 +261,18 @@ class SupabaseDatabase:
 
     def resolve_bet(self, bet_id: int, correct_answer: str) -> Tuple[bool, str]:
         try:
-            # Update bet with correct_answer and status 'resolved'
             response = supabase.table("bets").update({
                 "correct_answer": correct_answer,
                 "status": BetStatus.RESOLVED.value,
                 "resolved_at": "now()"
             }).eq("id", bet_id).execute()
-            if response.error:
-                return False, response.error.message
+            # Check for data existence, not .error
+            if not hasattr(response, 'data') or not response.data:
+                return False, "Failed to resolve bet (no data returned)"
             return True, "Bet resolved successfully"
         except Exception as e:
             return False, str(e)
+
 
 
     # ==================== PREDICTION OPERATIONS ====================
