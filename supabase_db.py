@@ -93,22 +93,23 @@ class SupabaseDatabase:
             return []
 
     def update_user_reedz(self, user_id: int, amount: int) -> Tuple[bool, str]:
-        """Update user's Reedz balance by adding `amount`"""
         try:
             user = self.get_user_by_id(user_id)
             if not user:
+                print(f"update_user_reedz: User {user_id} NOT FOUND")
                 return False, "User not found"
             new_balance = user.reedz_balance + amount
             resp = supabase.table("users").update({"reedz_balance": new_balance}).eq("id", user_id).execute()
-            # Debug print for diagnosis
-            print(f"update_user_reedz: User {user_id} new balance {new_balance}")
+            print(f"update_user_reedz: User {user_id} amount={amount}, new_balance={new_balance}, resp={resp}")
             if hasattr(resp, 'data') and resp.data:
                 return True, "Reedz balance updated"
             else:
+                print(f"FAIL: Could not update user {user_id}'s balance. resp={resp}")
                 return False, "Failed to update Reedz balance"
         except Exception as e:
             print(f"Error updating user Reedz: {e}")
             return False, f"Error: {str(e)}"
+
 
     def deactivate_user(self, user_id: int) -> Tuple[bool, str]:
         try:
@@ -322,11 +323,14 @@ class SupabaseDatabase:
     def update_prediction_points(self, prediction_id: int, points: int) -> Tuple[bool, str]:
         try:
             resp = supabase.table("predictions").update({"points_earned": points}).eq("id", prediction_id).execute()
-            print(f"update_prediction_points: Prediction {prediction_id} points {points}")  # Debug print
+            print(f"update_prediction_points: Attempted to set id={prediction_id}, points={points}, resp={resp}")
             if hasattr(resp, 'data') and resp.data:
+                print(f"SUCCESS: Updated prediction {prediction_id} with {points} points.")
                 return True, "Points updated"
             else:
+                print(f"FAIL: Could not update prediction {prediction_id} with {points} points. resp={resp}")
                 return False, "Failed to update points"
         except Exception as e:
             print(f"Error updating prediction points: {e}")
             return False, f"Error: {str(e)}"
+
