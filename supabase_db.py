@@ -186,31 +186,36 @@ class SupabaseDatabase:
 
 
     def get_bets_by_status(self, status: BetStatus) -> List[Bet]:
-        response = supabase.table("bets").select("*").eq("status", status.value).order("created_at", desc=True).execute()
-        if response.error:
-            print("Error fetching bets:", response.error)
+        try:
+            response = supabase.table("bets").select("*").eq("status", status.value).order("created_at", desc=True).execute()
+            bets = []
+            # Ensure response.data exists before iterating
+            if not hasattr(response, 'data') or not response.data:
+                return []
+            for row in response.data:
+                try:
+                    answertype = AnswerType(row["answertype"])  # safe conversion
+                except Exception:
+                    answertype = AnswerType.UNKNOWN
+                bet_status = BetStatus(row["status"]) if row.get("status") else BetStatus.OPEN
+                bets.append(Bet(
+                    id=row["id"],
+                    week=row["week"],
+                    title=row["title"],
+                    description=row.get("description"),
+                    status=bet_status,
+                    answertype=answertype,
+                    correct_answer=row.get("correct_answer"),
+                    created_at=row.get("created_at"),
+                    closed_at=row.get("closed_at"),
+                    resolved_at=row.get("resolved_at"),
+                    creator_id=row.get("creator_id")
+                ))
+            return bets
+        except Exception as e:
+            print("Error fetching bets:", e)
             return []
-        bets = []
-        for row in response.data:
-            try:
-                answertype = AnswerType(row["answertype"])  # safe conversion
-            except Exception:
-                answertype = AnswerType.UNKNOWN
-            bet_status = BetStatus(row["status"]) if row.get("status") else BetStatus.OPEN
-            bets.append(Bet(
-                id=row["id"],
-                week=row["week"],
-                title=row["title"],
-                description=row.get("description"),
-                status=bet_status,
-                answertype=answertype,
-                correct_answer=row.get("correct_answer"),
-                created_at=row.get("created_at"),
-                closed_at=row.get("closed_at"),
-                resolved_at=row.get("resolved_at"),
-                creator_id=row.get("creator_id")
-            ))
-        return bets
+
 
 
     def get_all_bets(self) -> List[Bet]:
