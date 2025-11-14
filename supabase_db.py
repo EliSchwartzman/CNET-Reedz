@@ -92,25 +92,6 @@ class SupabaseDatabase:
             print(f"Error: {e}")
             return []
 
-    def update_user_reedz(self, user_id: int, amount: int) -> Tuple[bool, str]:
-        try:
-            user = self.get_user_by_id(user_id)
-            if not user:
-                print(f"update_user_reedz: User {user_id} NOT FOUND")
-                return False, "User not found"
-            new_balance = user.reedz_balance + amount
-            resp = supabase.table("users").update({"reedz_balance": new_balance}).eq("id", user_id).execute()
-            print(f"update_user_reedz: User {user_id} amount={amount}, new_balance={new_balance}, resp={resp}")
-            if hasattr(resp, 'data') and resp.data:
-                return True, "Reedz balance updated"
-            else:
-                print(f"FAIL: Could not update user {user_id}'s balance. resp={resp}")
-                return False, "Failed to update Reedz balance"
-        except Exception as e:
-            print(f"Error updating user Reedz: {e}")
-            return False, f"Error: {str(e)}"
-
-
     def deactivate_user(self, user_id: int) -> Tuple[bool, str]:
         try:
             supabase.table("predictions").delete().eq("user_id", user_id).execute()
@@ -332,5 +313,23 @@ class SupabaseDatabase:
                 return False, "Failed to update points"
         except Exception as e:
             print(f"Error updating prediction points: {e}")
+            return False, f"Error: {str(e)}"
+
+    def update_user_reedz(self, user_id: int, amount: int) -> Tuple[bool, str]:
+        try:
+            user = self.get_user_by_id(user_id)
+            if not user:
+                print(f"update_user_reedz: User {user_id} NOT FOUND")
+                return False, "User not found"
+            new_balance = user.reedz_balance + amount
+            resp = supabase.table("users").update({"reedz_balance": new_balance}).eq("id", user_id).execute()
+            print(f"update_user_reedz: User {user_id} amount={amount}, new_balance={new_balance}, resp={resp}")
+            if hasattr(resp, 'data') and resp.data:
+                return True, "Reedz balance updated"
+            else:
+                print(f"FAIL: Could not update user {user_id}'s balance. resp={resp}")
+                return False, "Failed to update Reedz balance"
+        except Exception as e:
+            print(f"Error updating user Reedz: {e}")
             return False, f"Error: {str(e)}"
 
