@@ -3,22 +3,29 @@ from typing import List, Optional, Tuple
 from supabase import create_client, Client
 from models import User, Bet, Prediction, UserRole, BetStatus, AnswerType
 
+
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("Missing SUPABASE_URL or SUPABASE_KEY environment variables")
 
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 class SupabaseDatabase:
     """Cloud database using Supabase PostgreSQL"""
+
 
     def __init__(self):
         """Initialize Supabase connection"""
         pass
 
+
     # ==================== USER OPERATIONS ====================
+
 
     def create_user(self, username: str, password_hash: str, role: UserRole) -> Tuple[bool, str, Optional[int]]:
         """Create a new user"""
@@ -39,6 +46,7 @@ class SupabaseDatabase:
                 return False, "Username already exists", None
             return False, f"Error: {str(e)}", None
 
+
     def get_user_by_username(self, username: str) -> Optional[User]:
         """Get user by username (active only)"""
         try:
@@ -57,6 +65,7 @@ class SupabaseDatabase:
         except Exception as e:
             print(f"Error: {e}")
             return None
+
 
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID (active only)"""
@@ -77,6 +86,7 @@ class SupabaseDatabase:
             print(f"Error: {e}")
             return None
 
+
     def get_all_users(self) -> List[User]:
         """Get all active users ordered by Reedz balance"""
         try:
@@ -96,6 +106,7 @@ class SupabaseDatabase:
             print(f"Error: {e}")
             return []
 
+
     def update_user_reedz(self, user_id: int, amount: int) -> Tuple[bool, str]:
         """Update user's Reedz balance"""
         try:
@@ -111,6 +122,7 @@ class SupabaseDatabase:
         
     
 
+
     def deactivate_user(self, user_id: int) -> Tuple[bool, str]:
         """Deactivate user and delete all associated predictions"""
         try:
@@ -123,6 +135,7 @@ class SupabaseDatabase:
             return True, "User and all associated data deleted"
         except Exception as e:
             return False, f"Error: {str(e)}"
+
 
     # ==================== BET OPERATIONS ====================
     
@@ -145,6 +158,7 @@ class SupabaseDatabase:
             return False, "Failed to create bet", None
         except Exception as e:
             return False, f"Error: {str(e)}", None
+
 
     def get_bet_by_id(self, bet_id: int) -> Optional[Bet]:
         response = supabase.table("bets").select("*").eq("id", bet_id).single().execute()
@@ -169,6 +183,7 @@ class SupabaseDatabase:
             resolved_at=row.get("resolved_at"),
             creator_id=row.get("creator_id")
         )
+
 
     def get_bets_by_status(self, status: BetStatus) -> List[Bet]:
         response = supabase.table("bets").select("*").eq("status", status.value).order("created_at", desc=True).execute()
@@ -197,6 +212,7 @@ class SupabaseDatabase:
             ))
         return bets
 
+
     def get_all_bets(self) -> List[Bet]:
         """Get all bets"""
         try:
@@ -211,13 +227,14 @@ class SupabaseDatabase:
                     status=BetStatus(row["status"]),
                     correct_answer=row.get("correct_answer"),
                     created_at=row["created_at"],
-                    closed_at=row.get("closed_at"),
-                    resolved_at=row.get("resolved_at")
+                    closed_at=row["closed_at"],
+                    resolved_at=row["resolved_at"]
                 ))
             return bets
         except Exception as e:
             print(f"Error: {e}")
             return []
+
 
     def close_bet(self, bet_id: int) -> Tuple[bool, str]:
         """Close a bet (no more predictions allowed)"""
@@ -229,6 +246,7 @@ class SupabaseDatabase:
             return True, "Bet closed"
         except Exception as e:
             return False, f"Error: {str(e)}"
+
 
     def resolve_bet(self, bet_id: int, correct_answer: str) -> Tuple[bool, str]:
         try:
@@ -244,7 +262,9 @@ class SupabaseDatabase:
         except Exception as e:
             return False, str(e)
 
+
     # ==================== PREDICTION OPERATIONS ====================
+
 
     def create_prediction(self, bet_id: int, user_id: int, answer: str) -> Tuple[bool, str, Optional[int]]:
         """Create a prediction for a bet"""
@@ -262,6 +282,7 @@ class SupabaseDatabase:
             return False, "Failed to create prediction", None
         except Exception as e:
             return False, f"Error: {str(e)}", None
+
 
     def get_prediction_by_user_bet(self, user_id: int, bet_id: int) -> Optional[Prediction]:
         """Get user's prediction for a specific bet"""
@@ -282,6 +303,7 @@ class SupabaseDatabase:
             print(f"Error: {e}")
             return None
 
+
     def get_predictions_by_bet(self, bet_id: int) -> List[Prediction]:
         """Get all predictions for a bet"""
         try:
@@ -301,6 +323,7 @@ class SupabaseDatabase:
             print(f"Error: {e}")
             return []
 
+
     def get_predictions_by_user(self, user_id: int) -> List[Prediction]:
         """Get all predictions by a user"""
         try:
@@ -319,6 +342,7 @@ class SupabaseDatabase:
         except Exception as e:
             print(f"Error: {e}")
             return []
+
 
     def update_prediction_points(self, prediction_id: int, points: int) -> Tuple[bool, str]:
         """Update points earned on a prediction"""

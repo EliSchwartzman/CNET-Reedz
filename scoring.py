@@ -5,6 +5,7 @@ from typing import Tuple, List, Dict
 from supabase_db import SupabaseDatabase
 from models import User, Bet, Prediction, BetStatus, AnswerType
 
+
 class ScoringManager:
     """Handle scoring and Reedz distribution"""
     
@@ -67,7 +68,7 @@ class ScoringManager:
         return True, f"Bet resolved! Distributed {total_distributed} Reedz", scoring_details
     
     def _calculate_scores(self, predictions: List[Prediction], 
-                     correct_answer: str, answer_type: AnswerType) -> Dict[int, int]:
+                         correct_answer: str, answer_type: AnswerType) -> Dict[int, int]:
         """
         Calculate Reedz for each prediction based on accuracy
         

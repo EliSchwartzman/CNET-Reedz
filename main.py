@@ -2,17 +2,21 @@
 Command-line interface for testing the Reedz platforms
 """
 
+
 from supabase_db import SupabaseDatabase
 from auth import AuthManager
 from betting import BettingManager
 from scoring import ScoringManager
 from models import UserRole, AnswerType, BetStatus
 
+
 # Admin registration password
 ADMIN_REGISTRATION_PASSWORD = "reedz123"
 
+
 class ReedziCLI:
     """Command-line interface for Reedz platform"""
+
 
     def __init__(self):
         self.db = SupabaseDatabase()
@@ -20,6 +24,7 @@ class ReedziCLI:
         self.betting = BettingManager(self.db)
         self.scoring = ScoringManager(self.db)
         self.current_user = None
+
 
     def run(self):
         """Main application loop"""
@@ -31,6 +36,7 @@ class ReedziCLI:
                 self.show_auth_menu()
             else:
                 self.show_main_menu()
+
 
     def show_auth_menu(self):
         """Show authentication menu"""
@@ -49,6 +55,7 @@ class ReedziCLI:
         elif choice == '4':
             print("Goodbye!")
             exit(0)
+
 
     def show_main_menu(self):
         """Show main menu"""
@@ -99,6 +106,7 @@ class ReedziCLI:
         elif choice == '0':
             self.logout()
 
+
     def view_open_bets(self):
         print("\n--- Open Bets ---")
         bets = self.betting.get_open_bets()
@@ -111,6 +119,7 @@ class ReedziCLI:
             print(f"Week {bet.week}: {bet.title}")
             print(f"Description: {bet.description}")
             print(f"Answer Type: {bet.answertype.value}")
+
 
     def submit_prediction(self):
         print("\n--- Submit Prediction ---")
@@ -139,6 +148,7 @@ class ReedziCLI:
         print(msg)
         self.current_user = self.db.get_user_by_id(self.current_user.id)
 
+
     def view_my_predictions(self):
         print("\n--- My Predictions ---")
         predictions = self.betting.get_user_predictions(self.current_user)
@@ -155,6 +165,7 @@ class ReedziCLI:
             if pred.points_earned is not None:
                 print(f"Points Earned: {pred.points_earned} Reedz")
 
+
     def view_leaderboard(self):
         print("\n--- Leaderboard ---")
         leaderboard = self.scoring.get_leaderboard(limit=20)
@@ -163,6 +174,7 @@ class ReedziCLI:
         for entry in leaderboard:
             print(f"{entry['rank']:<6} {entry['username']:<20} {entry['reedz_balance']:<10} "
                   f"{entry['total_predictions']:<15} {entry['exact_answers']:<10}")
+
 
     def create_bet(self):
         print("\n--- Create New Bet ---")
@@ -190,6 +202,7 @@ class ReedziCLI:
         if success:
             print(f"Bet ID: {bet_id}")
 
+
     def close_bet(self):
         print("\n--- Close Bet ---")
         bets = self.betting.get_open_bets()
@@ -205,6 +218,7 @@ class ReedziCLI:
             return
         success, msg = self.betting.close_bet(self.current_user, int(bet_id))
         print(f"\n{msg}")
+
 
     def resolve_bet(self):
         print("\n--- Resolve Bet ---")
@@ -244,12 +258,15 @@ class ReedziCLI:
             print(f" Total Reedz Distributed: {details['total_reedz_distributed']}")
         self.current_user = self.db.get_user_by_id(self.current_user.id)
 
+
     # Add other admin/user management, registration, login/logout as in your original code
+
 
 def main():
     """Entry point"""
     cli = ReedziCLI()
     cli.run()
+
 
 if __name__ == "__main__":
     main()
