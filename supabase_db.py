@@ -161,28 +161,34 @@ class SupabaseDatabase:
 
 
     def get_bet_by_id(self, bet_id: int) -> Optional[Bet]:
-        response = supabase.table("bets").select("*").eq("id", bet_id).single().execute()
-        if response.error:
-            return None
-        row = response.data
         try:
-            answertype = AnswerType(row["answertype"])
-        except Exception:
-            answertype = AnswerType.UNKNOWN
-        bet_status = BetStatus(row["status"]) if row.get("status") else BetStatus.OPEN
-        return Bet(
-            id=row["id"],
-            week=row["week"],
-            title=row["title"],
-            description=row.get("description"),
-            status=bet_status,
-            answertype=answertype,
-            correct_answer=row.get("correct_answer"),
-            created_at=row.get("created_at"),
-            closed_at=row.get("closed_at"),
-            resolved_at=row.get("resolved_at"),
-            creator_id=row.get("creator_id")
-        )
+            response = supabase.table("bets").select("*").eq("id", bet_id).single().execute()
+            # Check that data exists
+            if not hasattr(response, 'data') or not response.data:
+                return None
+            row = response.data
+            try:
+                answertype = AnswerType(row["answertype"])
+            except Exception:
+                answertype = AnswerType.UNKNOWN
+            bet_status = BetStatus(row["status"]) if row.get("status") else BetStatus.OPEN
+            return Bet(
+                id=row["id"],
+                week=row["week"],
+                title=row["title"],
+                description=row.get("description"),
+                status=bet_status,
+                answertype=answertype,
+                correct_answer=row.get("correct_answer"),
+                created_at=row.get("created_at"),
+                closed_at=row.get("closed_at"),
+                resolved_at=row.get("resolved_at"),
+                creator_id=row.get("creator_id")
+            )
+        except Exception as e:
+            print(f"Error in get_bet_by_id: {e}")
+            return None
+
 
 
     def get_bets_by_status(self, status: BetStatus) -> List[Bet]:
